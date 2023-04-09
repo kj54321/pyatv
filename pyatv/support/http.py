@@ -7,6 +7,7 @@ import pathlib
 from queue import Queue
 import re
 from typing import Callable, Dict, Mapping, NamedTuple, Optional, Tuple, Union, cast
+import sys
 
 from aiohttp import ClientSession, web
 from aiohttp.web import middleware
@@ -391,6 +392,9 @@ class HttpConnection(asyncio.Protocol):
             response = cast(HttpResponse, self._responses.get())
         except asyncio.TimeoutError as ex:
             raise TimeoutError(f"no response to {method} {uri} ({protocol})") from ex
+            # Set the event and exit the process
+            event.set()
+            sys.exit(1) # exit with a non-zero status code to indicate an error
         finally:
             # If request failed and event is still in request queue, remove it
             if self._requests and self._requests[-1] == event:
